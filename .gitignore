@@ -4,3 +4,4 @@ play_*
 env
 build
 vend.egg-info
+play_register.py
