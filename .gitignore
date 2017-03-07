@@ -1,3 +1,6 @@
 .idea
 tests_play.py
+play_*
 env
+build
+vend.egg-info

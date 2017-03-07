@@ -1,3 +1,4 @@
+import datetime
 import requests
 
 
@@ -38,6 +39,7 @@ class Vend:
 
     def __get_response(self, endpoint, parameters=None):
         # manage response
+
         response = self.__build_get_request(endpoint=endpoint, parameters=parameters)
 
         return self.process_get_response(response=response, endpoint=endpoint)
@@ -62,15 +64,24 @@ class Vend:
 
         return self.data
 
-    def get_customers(self):
-        # Get list of customers, this will fetch all customers and add it to an list object
-        return self.__get_response('customers')
+    def get_customers(self, id=None, code=None, email=None, since=None):
+        # Get list of customers
+        parameters = self.__fix_parameters({
+            "id": id,
+            "code": code,
+            "email": email,
+            "since": since
+        })
+
+        return self.__get_response('customers', parameters=parameters)
 
     def get_customer(self, unique_id):
         # get single customer
-        return self.__get_response('customers', parameters=[unique_id])
+        parameters = self.__fix_parameters({"unique_id": unique_id})
 
-    def add_customer(self):
+        return self.__get_response('customers', parameters=parameters)
+
+    def add_customer(self, data={}):
         # Add customer POST
         return self.__get_response('customers', data=data)
 
@@ -88,16 +99,41 @@ class Vend:
 
         return self.__build_get_request('products', parameters=[])
 
-    def get_sales(self):
-        # https://developers.vendhq.com/documentation/api/0.x/register-sales.html
-        # in the documentation: Dont rely on being able to get all the register sales for a retailer in a single API call.
-        return self.__get_response(endpoint='register_sales')
+    def get_sales(self, since=None, tag=None, status=[], outlet_id=None):
+
+        """
+                This will get all sales since the beginning, this is resource intensive and not recommended.
+                If you specify with parameter it will return all data in that time frame
+                https://developers.vendhq.com/documentation/api/0.x/register-sales.html
+                in the documentation: Dont rely on being able to get all the register sales for a retailer in a single API call.
+        """
+
+        parameters = self.__fix_parameters({'tag': tag, 'status': status,
+                                            'outlet_id': outlet_id})
+
+        response = self.__get_response(endpoint='register_sales', parameters=parameters)
+        sales = []
+        if since:
+            for sale in response:
+                sale_date = datetime.datetime.strptime(sale['sale_date'], "%Y-%m-%d %H:%M:%S")
+                if sale_date >= datetime.datetime.strptime(since, "%Y-%m-%d"):
+                    sales.append(sale)
+            return sales
+
+        return response
 
     def get_sale(self, unique_id):
         return self.__get_response(endpoint='register_sales', parameters=[unique_id])
 
     def add_sale(self, ):
         return self.__build_post_request('customers', data=data)
+
+    def __fix_parameters(self, parameters):
+        for parameter in parameters.keys():
+            if not parameters[parameter]:
+                parameters.pop(parameter)
+
+        return parameters
 
 
 """
