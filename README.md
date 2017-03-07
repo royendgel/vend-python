@@ -4,6 +4,7 @@ VEND PYTHON
 ### My intend to migrate my private repo to opensource and public
 
 ###Installation
+`pip install vendpos`
 clone/download this project
 python setup.py install
  
